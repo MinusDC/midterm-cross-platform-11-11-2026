@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/product_model.dart';
 import '../providers/product_provider.dart';
+import '../services/auth_service.dart';
+import '../services/firebase_service.dart';
 import '../widgets/loading_view.dart';
 import '../widgets/product_card.dart';
 import 'product_form_screen.dart';
@@ -26,6 +27,11 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Đăng xuất',
+            onPressed: () => _signOut(context),
+            icon: const Icon(Icons.logout),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: FilledButton.icon(
@@ -36,7 +42,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<List<Product>>(
+      body: StreamBuilder<List<ProductDocument>>(
         stream: productsStream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -48,7 +54,7 @@ class HomeScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const LoadingView(message: 'Đang tải sản phẩm...');
           }
-          final products = snapshot.data ?? const <Product>[];
+          final products = snapshot.data ?? const <ProductDocument>[];
           if (products.isEmpty) {
             return const _EmptyView();
           }
@@ -71,11 +77,11 @@ class HomeScreen extends StatelessWidget {
                 ),
                 itemCount: products.length,
                 itemBuilder: (context, index) {
-                  final product = products[index];
+                  final document = products[index];
                   return ProductCard(
-                    product: product,
-                    onEdit: () => _openForm(context, product: product),
-                    onDelete: () => _confirmDelete(context, product),
+                    product: document.product,
+                    onEdit: () => _openForm(context, document: document),
+                    onDelete: () => _confirmDelete(context, document),
                   );
                 },
               );
@@ -91,15 +97,19 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _openForm(BuildContext context, {Product? product}) {
+  void _openForm(BuildContext context, {ProductDocument? document}) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ProductFormScreen(product: product),
+        builder: (_) => ProductFormScreen(document: document),
       ),
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, Product product) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    ProductDocument document,
+  ) async {
+    final product = document.product;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -123,7 +133,7 @@ class HomeScreen extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      await context.read<ProductProvider>().deleteProduct(product.id);
+      await context.read<ProductProvider>().deleteProduct(document);
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
@@ -142,6 +152,18 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
+  }
+
+  Future<void> _signOut(BuildContext context) async {
+    try {
+      await context.read<AuthService>().signOut();
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể đăng xuất: $error')));
+      }
+    }
   }
 }
 

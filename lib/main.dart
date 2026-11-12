@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart' hide FirebaseService;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'config/firebase_config.dart';
 import 'providers/product_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'services/auth_service.dart';
 import 'services/cloudinary_service.dart';
 import 'services/firebase_service.dart';
 
@@ -38,11 +41,16 @@ Future<void> main() async {
   }
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ProductProvider(
-        firebaseService: FirebaseService(),
-        cloudinaryService: CloudinaryService.fromDotEnv(),
-      ),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => ProductProvider(
+            firebaseService: FirebaseService(),
+            cloudinaryService: CloudinaryService.fromDotEnv(),
+          ),
+        ),
+        Provider(create: (_) => AuthService()),
+      ],
       child: const ProductApp(),
     ),
   );
@@ -81,7 +89,42 @@ class ProductApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HomeScreen(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = context.read<AuthService>();
+    return StreamBuilder<User?>(
+      stream: authService.authStateChanges,
+      initialData: authService.currentUser,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Không thể kiểm tra trạng thái đăng nhập: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          );
+        }
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return snapshot.data == null ? const LoginScreen() : const HomeScreen();
+      },
     );
   }
 }

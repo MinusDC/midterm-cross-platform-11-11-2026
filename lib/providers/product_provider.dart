@@ -16,13 +16,13 @@ class ProductProvider extends ChangeNotifier {
   bool _isSaving = false;
 
   bool get isSaving => _isSaving;
-  Stream<List<Product>> get products => firebaseService.watchProducts();
+  Stream<List<ProductDocument>> get products => firebaseService.watchProducts();
 
   Future<void> saveProduct({
-    Product? existing,
+    ProductDocument? existing,
     required String name,
-    required String category,
     required double price,
+    required int soluong,
     XFile? image,
   }) async {
     if (_isSaving) {
@@ -36,20 +36,19 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final imageUrl = image == null
-          ? existing!.imageUrl
+          ? existing!.product.image
           : await cloudinaryService.uploadImage(image);
       final product = Product(
-        id: existing?.id ?? '',
         name: name,
-        category: category,
         price: price,
-        imageUrl: imageUrl,
+        soluong: soluong,
+        image: imageUrl,
       );
 
       if (existing == null) {
         await firebaseService.createProduct(product);
       } else {
-        await firebaseService.updateProduct(product);
+        await firebaseService.updateProduct(existing.id, product);
       }
     } finally {
       _isSaving = false;
@@ -57,5 +56,6 @@ class ProductProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteProduct(String id) => firebaseService.deleteProduct(id);
+  Future<void> deleteProduct(ProductDocument product) =>
+      firebaseService.deleteProduct(product.id);
 }

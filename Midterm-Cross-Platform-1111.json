@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Apple",
+    "price": 15000,
+    "soluong": 1,
+    "image": "https://res.cloudinary.com/dyqn0tht5/image/upload/v1794405542/u3xnd6qfwlgjwp7mvxbn.jpg"
+  },
+  {
+    "name": "Banana",
+    "price": 10000,
+    "soluong": 1,
+    "image": "https://res.cloudinary.com/dyqn0tht5/image/upload/v1794405588/wolsshoedlwzvacyufiv.jpg"
+  },
+  {
+    "name": "Thịt nướng",
+    "price": 150000,
+    "soluong": 2,
+    "image": "https://res.cloudinary.com/dyqn0tht5/image/upload/v1794405273/uymqnkzkvvdv1ht2zocx.jpg"
+  }
+]

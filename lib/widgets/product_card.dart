@@ -32,10 +32,10 @@ class ProductCard extends StatelessWidget {
       children: [
         AspectRatio(
           aspectRatio: 1.55,
-          child: product.imageUrl.isEmpty
+          child: product.image.isEmpty
               ? const _ImagePlaceholder()
               : CachedNetworkImage(
-                  imageUrl: product.imageUrl,
+                  imageUrl: product.image,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => const _ImagePlaceholder(
                     child: CircularProgressIndicator(),
@@ -65,17 +65,15 @@ class ProductCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              if (product.category.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'Loại: ${product.category}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.black54),
-                ),
-              ],
+              const SizedBox(height: 6),
+              Text(
+                'Số lượng: ${product.soluong}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.black54),
+              ),
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

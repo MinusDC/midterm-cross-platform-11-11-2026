@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../models/product_model.dart';
 import '../providers/product_provider.dart';
+import '../services/firebase_service.dart';
 
 class ProductFormScreen extends StatefulWidget {
-  const ProductFormScreen({this.product, super.key});
+  const ProductFormScreen({this.document, super.key});
 
-  final Product? product;
+  final ProductDocument? document;
 
   @override
   State<ProductFormScreen> createState() => _ProductFormScreenState();
@@ -20,21 +20,21 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final _quantityController = TextEditingController();
   final _imagePicker = ImagePicker();
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
 
-  bool get _isEditing => widget.product != null;
+  bool get _isEditing => widget.document != null;
 
   @override
   void initState() {
     super.initState();
-    final product = widget.product;
+    final product = widget.document?.product;
     if (product != null) {
       _nameController.text = product.name;
       _priceController.text = product.price.toStringAsFixed(0);
-      _categoryController.text = product.category;
+      _quantityController.text = product.soluong.toString();
     }
   }
 
@@ -42,7 +42,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
-    _categoryController.dispose();
+    _quantityController.dispose();
     super.dispose();
   }
 
@@ -64,7 +64,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 children: [
                   _ImagePickerField(
                     selectedImageBytes: _selectedImageBytes,
-                    existingImageUrl: widget.product?.imageUrl,
+                    existingImageUrl: widget.document?.product.image,
                     isSaving: isSaving,
                     onTap: isSaving ? null : _pickImage,
                   ),
@@ -116,17 +116,21 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: _categoryController,
+                    controller: _quantityController,
                     enabled: !isSaving,
-                    textCapitalization: TextCapitalization.sentences,
+                    keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: 'Loại sản phẩm',
-                      hintText: 'Ví dụ: Đồ gia dụng',
-                      prefixIcon: Icon(Icons.category_outlined),
+                      labelText: 'Số lượng',
+                      hintText: 'Ví dụ: 10',
+                      prefixIcon: Icon(Icons.inventory_outlined),
                     ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Vui lòng nhập loại sản phẩm.'
-                        : null,
+                    validator: (value) {
+                      final quantity = int.tryParse((value ?? '').trim());
+                      if (quantity == null || quantity < 0) {
+                        return 'Nhập số lượng là số nguyên không âm.';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 28),
                   FilledButton.icon(
@@ -188,12 +192,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     final price = double.parse(
       _priceController.text.trim().replaceAll(',', '.'),
     );
+    final quantity = int.parse(_quantityController.text.trim());
     try {
       await context.read<ProductProvider>().saveProduct(
-        existing: widget.product,
+        existing: widget.document,
         name: _nameController.text,
-        category: _categoryController.text,
         price: price,
+        soluong: quantity,
         image: _selectedImage,
       );
       if (mounted) {

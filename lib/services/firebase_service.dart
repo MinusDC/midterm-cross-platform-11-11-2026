@@ -2,6 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/product_model.dart';
 
+class ProductDocument {
+  const ProductDocument({required this.id, required this.product});
+
+  final String id;
+  final Product product;
+}
+
 class FirebaseService {
   FirebaseService({FirebaseFirestore? firestore})
     : _products = (firestore ?? FirebaseFirestore.instance).collection(
@@ -10,9 +17,14 @@ class FirebaseService {
 
   final CollectionReference<Map<String, dynamic>> _products;
 
-  Stream<List<Product>> watchProducts() => _products.snapshots().map(
+  Stream<List<ProductDocument>> watchProducts() => _products.snapshots().map(
     (snapshot) => snapshot.docs
-        .map((document) => Product.fromMap(document.id, document.data()))
+        .map(
+          (document) => ProductDocument(
+            id: document.id,
+            product: Product.fromMap(document.data()),
+          ),
+        )
         .toList(growable: false),
   );
 
@@ -20,13 +32,8 @@ class FirebaseService {
     await _products.add(product.toMap());
   }
 
-  Future<void> updateProduct(Product product) async {
-    await _products.doc(product.id).update({
-      ...product.toMap(),
-      'description': FieldValue.delete(),
-      'createdAt': FieldValue.delete(),
-      'updatedAt': FieldValue.delete(),
-    });
+  Future<void> updateProduct(String id, Product product) async {
+    await _products.doc(id).set(product.toMap());
   }
 
   Future<void> deleteProduct(String id) async {

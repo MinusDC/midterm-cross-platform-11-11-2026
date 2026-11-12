@@ -1,34 +1,33 @@
 class Product {
   const Product({
-    required this.id,
     required this.name,
-    required this.category,
     required this.price,
-    required this.imageUrl,
+    required this.soluong,
+    required this.image,
   });
 
-  final String id;
   final String name;
-  final String category;
   final double price;
-  final String imageUrl;
+  final int soluong;
+  final String image;
 
-  factory Product.fromMap(String id, Map<String, dynamic> map) {
+  factory Product.fromMap(Map<String, dynamic> map) {
     final rawPrice = map['price'];
+    final rawQuantity = map['soluong'];
+    final rawName = map['name'];
+    final rawImage = map['image'];
     return Product(
-      id: id,
-      name: map['name'] as String? ?? '',
-      category:
-          map['category'] as String? ?? map['description'] as String? ?? '',
+      name: rawName is String ? rawName : '',
       price: rawPrice is num ? rawPrice.toDouble() : 0,
-      imageUrl: map['imageUrl'] as String? ?? '',
+      soluong: rawQuantity is num ? rawQuantity.toInt() : 0,
+      image: rawImage is String ? rawImage : '',
     );
   }
 
   Map<String, dynamic> toMap() => {
     'name': name.trim(),
-    'category': category.trim(),
     'price': price,
-    'imageUrl': imageUrl,
+    'soluong': soluong,
+    'image': image.trim(),
   };
 }

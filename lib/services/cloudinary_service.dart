@@ -28,14 +28,14 @@ class CloudinaryService {
       'api.cloudinary.com',
       '/v1_1/$_cloudName/image/upload',
     );
+    final imageBytes = await image.readAsBytes();
+    if (imageBytes.isEmpty) {
+      throw const CloudinaryException('Tệp ảnh được chọn không có dữ liệu.');
+    }
     final request = http.MultipartRequest('POST', endpoint)
       ..fields['upload_preset'] = _uploadPreset
       ..files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          await image.readAsBytes(),
-          filename: image.name,
-        ),
+        http.MultipartFile.fromBytes('file', imageBytes, filename: image.name),
       );
 
     final streamedResponse = await request.send();
